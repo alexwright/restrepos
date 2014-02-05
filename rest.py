@@ -12,10 +12,16 @@ repos = {
     },
 }
 
+def get_repo(repo_id):
+    if repo_id not in repos:
+        raise "unknown repo"
+
+    info = repos[repo_id]
+    return pygit2.Repository(info["path"])
+
 class RepoDetail(restful.Resource):
     def get(self, repo_id):
-        repoInfo = repos[repo_id]
-        repo = pygit2.Repository(repoInfo["path"])
+        repo = get_repo(repo_id)
         return {
             "branches": repo.listall_branches(),
         }
