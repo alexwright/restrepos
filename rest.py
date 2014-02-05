@@ -19,6 +19,29 @@ def get_repo(repo_id):
     info = repos[repo_id]
     return pygit2.Repository(info["path"])
 
+class TreeTraversalError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return repr(self.value)
+
+def traverse(repo, tree, path):
+    if len(path) == 0:
+        return tree
+
+    name = path.pop(0)
+    if name not in tree:
+        raise TreeTraversalError("path not found")
+
+    obj = repo[tree[name].oid]
+    if len(path) == 0:
+        return obj
+
+    if obj.type == pygit2.GIT_OBJ_TREE:
+        return traverse(repo, obj, path)
+    raise TreeTraversalError("tried to traverse a non-tree")
+
 class RepoDetail(restful.Resource):
     def get(self, repo_id):
         repo = get_repo(repo_id)
